@@ -19,7 +19,7 @@ typedef struct
 
 
 extern void RTC_init(void);
-extern void RTC_get_time(RTC_time_t *time);
+extern void RTC_get_time(RTC_time_t *time)	__attribute__((nonnull));
 
 
 

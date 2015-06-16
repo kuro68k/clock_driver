@@ -44,7 +44,7 @@ void RTC_init(void)
 void RTC_get_time(RTC_time_t *time)
 {
 	cli();
-	memcpy(time, (void*)time_AT, sizeof(RTC_time_t));
+	memcpy(time, (void*)&time_AT, sizeof(RTC_time_t));
 	sei();
 }
 
