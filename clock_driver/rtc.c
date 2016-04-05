@@ -3,11 +3,15 @@
  *
  * Created: 15/06/2015 14:52:59
  *  Author: paul.qureshi
+ *
+ * RTC with calendar function
  */ 
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "hw_misc.h"
@@ -49,6 +53,130 @@ void RTC_get_time(RTC_time_t *time)
 }
 
 /**************************************************************************************************
+** Check if a year is a leap year
+*/
+bool rtc_is_leap_year(uint8_t year)
+{
+	if (year % 100 == 0)
+	{
+		//if (year % 400 == 0)
+		if (year == 0)		// uint8, 2000 was not a leap year
+			return true;
+		else
+			return false;
+	}
+
+	if (year % 4 == 0)
+		return true;
+
+	return false;
+}
+
+/**************************************************************************************************
+** Return the number of days in a month
+*/
+uint8_t rtc_days_in_month(uint8_t month, uint8_t year)
+{
+	uint8_t d = days_in_month[month];
+	if ((month == 2) && rtc_is_leap_year(year))	// February in a leap year
+		d++;
+	return d;
+}
+
+/**************************************************************************************************
+** Validate time
+*/
+bool RTC_validate(RTC_time_t *time)
+{
+	if ((time->hrs > 23) ||
+		(time->mins > 59) ||
+		(time->secs > 59) ||	// can't handle leap seconds
+		(time->m == 0) ||
+		(time->m > 12) ||
+		(time->d == 0) ||
+		(time->d > rtc_days_in_month(time->m, time->y)))
+		return false;
+	return true;
+}
+
+/**************************************************************************************************
+** Increment day
+*/
+void rtc_increment_day(RTC_time_t *time)
+{
+	time->d++;
+				
+	uint8_t max_d = days_in_month[time->m];
+	if ((time->m == 2) && rtc_is_leap_year(time->y))	// February in a leap year
+		max_d++;
+				
+	if (time->d > max_d)
+	{
+		time->d = 1;
+		time->m++;
+		if (time->m > 12)
+		{
+			time->m = 1;
+			time->y++;
+			if (time->y > 99)
+				time->y = 0;
+		}
+	}
+}
+
+/**************************************************************************************************
+** Decrement day
+*/
+void rtc_decrement_day(RTC_time_t *time)
+{
+	if (time->d > 1)
+	{
+		time->d--;
+		return;
+	}
+				
+	if ((time->y == 0) && (time->m == 1))	// can't go back any further
+		return;
+	
+	time->m--;
+	if (time->m == 0)
+	{
+		time->m = 12;
+		time->y--;
+	}
+
+	time->d = days_in_month[time->m];
+	if ((time->m == 2) && rtc_is_leap_year(time->y))	// February in a leap year
+		time->d++;
+}
+
+/**************************************************************************************************
+** Adjust time for timezone/DST. hours_offset in the range -23 to +23.
+*/
+void RTC_adjust_for_timezone(RTC_time_t *time, int8_t hours_offset)
+{
+	if (hours_offset > 0)		// wind clock forwards
+	{
+		time->hrs += hours_offset;
+		if (time->hrs > 23)
+		{
+			time->hrs -= 24;
+			rtc_increment_day(time);
+		}
+	}
+	
+	if (hours_offset < 0)		// wind clock backwards
+	{
+		if (time->hrs < abs(hours_offset))
+		{
+			time->hrs += 24;
+			rtc_decrement_day(time);
+		}
+		time->hrs += hours_offset;
+	}
+}
+
+/**************************************************************************************************
 ** Second tick interrupt
 */
 ISR(RTC_OVF_vect)
@@ -67,24 +195,7 @@ ISR(RTC_OVF_vect)
 			if (time_AT.hrs > 23)
 			{
 				time_AT.hrs = 0;
-				time_AT.d++;
-				
-				uint8_t max_d = days_in_month[time_AT.m];
-				if ((time_AT.y % 4) == 0)	// leap year calculation will break on century years, meh
-					max_d++;
-				
-				if (time_AT.d > max_d)
-				{
-					time_AT.d = 0;
-					time_AT.m++;
-					if (time_AT.m > 12)
-					{
-						time_AT.m = 0;
-						time_AT.y++;
-						if (time_AT.y > 99)
-							time_AT.y = 0;
-					}
-				}
+				rtc_increment_day((RTC_time_t *)&time_AT);
 			}
 		}
 	}

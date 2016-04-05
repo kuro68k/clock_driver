@@ -20,6 +20,8 @@ typedef struct
 
 extern void RTC_init(void);
 extern void RTC_get_time(RTC_time_t *time)	__attribute__((nonnull));
+extern bool RTC_validate(RTC_time_t *time)	__attribute__((nonnull));
+extern void RTC_adjust_for_timezone(RTC_time_t *time, int8_t hours_offset)	__attribute__((nonnull));
 
 
 

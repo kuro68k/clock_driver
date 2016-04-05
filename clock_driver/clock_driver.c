@@ -7,6 +7,7 @@
 
 
 #include <avr/io.h>
+#include <stdbool.h>
 #include "debug.h"
 #include "hw_misc.h"
 #include "display.h"
