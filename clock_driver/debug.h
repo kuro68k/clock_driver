@@ -15,8 +15,9 @@
 
 
 #define DBG_USART				USARTC0
-#define DBG_USART_BSEL			0
-#define DBG_USART_BSCALE		0
+//#define DBG_USART_BSEL			0
+//#define DBG_USART_BSCALE		0
+#define DBG_BAUDRATE			115200
 #define DBG_USART_CLK2X			USART_CLK2X_bm
 #define DBG_PORT				PORTC
 #define DBG_TX_PIN_bm			PIN3_bm

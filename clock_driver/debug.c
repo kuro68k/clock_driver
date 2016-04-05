@@ -8,6 +8,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <stdio.h>
+#include "xmega_baud.h"
 #include "debug.h"
 
 
@@ -33,11 +34,14 @@ void DBG_init(void)
 {
 	DBG_PORT.DIRSET = DBG_TX_PIN_bm;
 	
-	int		bsel = DBG_USART_BSEL;
-	uint8_t	bscale = DBG_USART_BSCALE;
+	//int		bsel = DBG_USART_BSEL;
+	//uint8_t	bscale = DBG_USART_BSCALE;
 
-	DBG_USART.BAUDCTRLA = (uint8_t)bsel;
-	DBG_USART.BAUDCTRLB = (bscale << 4) | (bsel >> 8);
+	//DBG_USART.BAUDCTRLA = (uint8_t)bsel;
+	//DBG_USART.BAUDCTRLB = (bscale << 4) | (bsel >> 8);
+	DBG_USART.BAUDCTRLA = BSEL(F_CPU, DBG_BAUDRATE) & 0xff;
+	DBG_USART.BAUDCTRLB = (BSCALE(F_CPU, DBG_BAUDRATE) << USART_BSCALE0_bp) | (BSEL(F_CPU, DBG_BAUDRATE) >> 8);
+
 	DBG_USART.CTRLA = 0;
 	DBG_USART.CTRLB = USART_TXEN_bm | DBG_USART_CLK2X;
 	DBG_USART.CTRLC = USART_CHSIZE_8BIT_gc;
