@@ -13,6 +13,7 @@
 #include "hw_misc.h"
 #include "display.h"
 #include "rtc.h"
+#include "gps.h"
 
 // 2kclk (2s) watchdog, continuous BOD at 3.0V
 FUSES = {
@@ -27,16 +28,11 @@ FUSES = {
 
 int main(void)
 {
-	SLEEP.CTRL	= SLEEP_SMODE_IDLE_gc | SLEEP_SEN_bm;
-	PR.PRGEN	= PR_XCL_bm;
-	PR.PRPA		= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
-	PR.PRPC		= PR_TWI_bm | PR_HIRES_bm;
-	PR.PRPD		= PR_TWI_bm | PR_HIRES_bm;
-
 	DBG_init();
 	HW_init();
 	DIS_init();
 	RTC_init();
+	GPS_init();
 
 	// enable interrupts
 	HW_CCPWrite(&PMIC.CTRL, PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm);

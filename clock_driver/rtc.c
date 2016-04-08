@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "hw_misc.h"
+#include "gps.h"
 #include "rtc.h"
 
 
@@ -53,6 +54,7 @@ void RTC_wait_for_second_tick(void)
 	{
 		sleep_cpu();
 		WDR();
+		GPS_task();
 	}
 }
 

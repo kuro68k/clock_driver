@@ -21,5 +21,8 @@
 #define	GPS_TX_PIN_bm			PIN7_bm
 
 
+extern void GPS_init(void);
+extern void GPS_task(void);
+
 
 #endif /* GPS_H_ */

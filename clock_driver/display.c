@@ -99,6 +99,14 @@ void DIS_set_string_P(uint8_t digit, const __flash char *s)
 }
 
 /**************************************************************************************************
+** Set 16 seg digit by ASCII value
+*/
+void DIS_set_digit_bitmap(uint8_t digit, uint16_t bitmap)
+{
+	bitmap_AT[digit] = bitmap;
+}
+
+/**************************************************************************************************
 ** Display a string from RAM
 */
 void DIS_set_string(uint8_t digit, const char *s)

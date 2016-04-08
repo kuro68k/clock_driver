@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 #include "debug.h"
+#include "hw_misc.h"
 #include "xmega_baud.h"
 #include "rtc.h"
 #include "gps.h"
@@ -19,8 +20,8 @@
 
 volatile char		gps_buffer_AT[256];			// !! ATOMIC !! incoming sentence buffer
 volatile uint8_t	gps_rx_index_AT = 0;		// !! ATOMIC !! read head
-volatile uint16_t	gps_rx_sol_index_AT = -1;	// !! ATOMIC !! index of the last found SOL, or -1 if none
-volatile uint16_t	gps_rx_eol_index_AT = -1;	// !! ATOMIC !! index of the last found EOL, or -1 if none
+volatile int16_t	gps_rx_sol_index_AT = -1;	// !! ATOMIC !! index of the last found SOL, or -1 if none
+volatile int16_t	gps_rx_eol_index_AT = -1;	// !! ATOMIC !! index of the last found EOL, or -1 if none
 
 
 /**************************************************************************************************
@@ -108,18 +109,15 @@ uint16_t gps_skip_char(char c, uint8_t start, uint8_t end)
 */
 void GPS_task(void)
 {
-	cli();
-	uint16_t sol = gps_rx_sol_index_AT;
-	uint16_t eol = gps_rx_eol_index_AT;
+	int16_t sol;
+	int16_t eol;
+	ATOMIC(sol = gps_rx_sol_index_AT);
+	ATOMIC(eol = gps_rx_eol_index_AT);
 	if ((eol == -1) || (sol == -1))
-	{
-		sei();
 		return;
-	}
 	// line found, decode it
-	gps_rx_sol_index_AT = -1;
-	gps_rx_eol_index_AT = -1;
-	sei();
+	ATOMIC(gps_rx_sol_index_AT = -1);
+	ATOMIC(gps_rx_eol_index_AT = -1);
 
 	uint8_t idx = sol & 0xFF;
 	idx++;	// skip '$'

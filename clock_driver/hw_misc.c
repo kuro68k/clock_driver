@@ -16,6 +16,10 @@
 void HW_init(void)
 {
 	SLEEP.CTRL	= SLEEP_SMODE_IDLE_gc | SLEEP_SEN_bm;
+	PR.PRGEN	= PR_XCL_bm;
+	PR.PRPA		= PR_DAC_bm | PR_ADC_bm | PR_AC_bm;
+	PR.PRPC		= PR_TWI_bm | PR_HIRES_bm;
+	PR.PRPD		= PR_TWI_bm | PR_HIRES_bm;
 
 	// set 16MHz CPU clock
 	OSC.CTRL |= OSC_RC32MEN_bm;											// enable 32MHz RC oscillator
