@@ -13,6 +13,10 @@
 #include "rtc.h"
 #include "gps.h"
 
+// debug output
+#define GPS_ECHO
+
+
 volatile char		gps_buffer_AT[256];			// !! ATOMIC !! incoming sentence buffer
 volatile uint8_t	gps_rx_index_AT = 0;		// !! ATOMIC !! read head
 volatile uint16_t	gps_rx_sol_index_AT = -1;	// !! ATOMIC !! index of the last found SOL, or -1 if none
@@ -206,10 +210,14 @@ void GPS_task(void)
 ISR(GPS_USART_RXC_vect)
 {
 	uint8_t c = GPS_USART.DATA;		// clears interrupt flag
-	
+
 	if (c == '$')
 		gps_rx_sol_index_AT = gps_rx_index_AT;
 	if (c == '\r')
 		gps_rx_eol_index_AT = gps_rx_index_AT;
 	gps_buffer_AT[gps_rx_index_AT++] = c;
+
+#ifdef GPS_ECHO
+	DBG_putc(c);
+#endif
 }

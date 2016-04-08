@@ -39,6 +39,7 @@
 											HW_CCPWrite(&WDT.CTRL, WDT_CEN_bm);										\
 									} while(0)
 
+#define WDR()						asm("wdr")
 #define NOP()						asm("nop")
 
 

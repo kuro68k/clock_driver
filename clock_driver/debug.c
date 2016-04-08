@@ -18,14 +18,14 @@
 /**************************************************************************************************
 ** Output a character to the debug USART
 */
-int dbg_putc(char c, FILE *stream)
+int dbg_putc_stdio(char c, FILE *stream)
 {
 	while(!(DBG_USART.STATUS & USART_DREIF_bm));
 	DBG_USART.DATA = c;
 	return 0;
 }
 
-FILE usart_str = FDEV_SETUP_STREAM(dbg_putc, NULL, _FDEV_SETUP_WRITE);
+FILE usart_str = FDEV_SETUP_STREAM(dbg_putc_stdio, NULL, _FDEV_SETUP_WRITE);
 
 /**************************************************************************************************
 ** Set up debug output USART
@@ -33,6 +33,9 @@ FILE usart_str = FDEV_SETUP_STREAM(dbg_putc, NULL, _FDEV_SETUP_WRITE);
 void DBG_init(void)
 {
 	DBG_PORT.DIRSET = DBG_TX_PIN_bm;
+#ifdef DBG_USART_SWAP_PINS
+	DBG_PORT.REMAP |= PORT_USART0_bm;
+#endif
 	
 	//int		bsel = DBG_USART_BSEL;
 	//uint8_t	bscale = DBG_USART_BSCALE;

@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/sleep.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -32,6 +33,7 @@ void RTC_init(void)
 	memset((void *)&time_AT, 0, sizeof(time_AT));
 	time_AT.d = 1;
 	time_AT.m = 1;
+	time_AT.y = 16;
 
 	CLK.RTCCTRL = CLK_RTCSRC_EXTCLK_gc | CLK_RTCEN_bm;		// 32768Hz from TCXO
 	
@@ -40,6 +42,18 @@ void RTC_init(void)
 	RTC.PER = 32768;
 	RTC.CTRL = RTC_PRESCALER_DIV1_gc;
 	RTC.INTCTRL = RTC_OVFINTLVL_LO_gc;
+}
+
+/**************************************************************************************************
+** Wait for start of second
+*/
+void RTC_wait_for_second_tick(void)
+{
+	while (RTC_second_tick_SIG == 0)
+	{
+		sleep_cpu();
+		WDR();
+	}
 }
 
 /**************************************************************************************************
