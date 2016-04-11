@@ -46,7 +46,6 @@ extern void DIS_set_digit(uint8_t digit, char c);
 extern void DIS_set_string(uint8_t digit, const char *s);
 extern void DIS_set_digit_bitmap(uint8_t digit, uint16_t bitmap);
 extern void DIS_set_brightness(uint8_t brightness);
-extern void DIS_set_digit_brightness(uint8_t digit, uint8_t brightness);
 
 
 

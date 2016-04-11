@@ -18,6 +18,7 @@ typedef struct
 
 
 extern volatile uint8_t	RTC_second_tick_SIG;
+extern volatile uint8_t	RTC_minute_tick_SIG;
 
 extern void RTC_init(void);
 extern void RTC_wait_for_second_tick(void);

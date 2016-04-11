@@ -18,14 +18,7 @@
 #include "buttons.h"
 #include "eeprom.h"
 
-enum STATE_MACHINE_enum
-{
-	STATE_CLOCK,
-	STATE_SET_ALARM
-};
-
 extern const __flash uint8_t bin_dec_lut[100][2];
-
 
 struct {
 	uint8_t		hour;
@@ -66,7 +59,7 @@ uint32_t ui_crc32(void *buffer, uint16_t bytes)
 void UI_init(void)
 {
 	// check alarm settings
-	memcpy(&alarm, EEP_MAPPED_ADDR(0, 0), sizeof(alarm));
+	memcpy(&alarm, (void *)EEP_MAPPED_ADDR(0, 0), sizeof(alarm));
 	if (alarm.crc != ui_crc32(&alarm, sizeof(alarm) - sizeof(uint32_t)))
 	{
 		// saved settings lost, restore default
@@ -82,8 +75,23 @@ void UI_init(void)
 	}
 
 	// check alarm settings
-	memcpy(&brightness, EEP_MAPPED_ADDR(1, 0), sizeof(brightness));
+	memcpy(&brightness, (void *)EEP_MAPPED_ADDR(1, 0), sizeof(brightness));
 	if (brightness.crc != ui_crc32(&brightness, sizeof(brightness) - sizeof(uint32_t)))
+	{
+		brightness.high = 100;
+		brightness.low = 50;
+		brightness.start_hour = 8;
+		brightness.start_minute = 0;
+		brightness.end_hour = 23;
+		brightness.end_minute = 0;
+		brightness.threshold = 5;
+		brightness.crc = ui_crc32(&brightness, sizeof(brightness) - sizeof(uint32_t));
+
+		EEP_WaitForNVM();
+		memcpy((void *)EEP_MAPPED_ADDR(1, 0), &brightness, sizeof(brightness));
+		EEP_AtomicWritePage(0);
+		EEP_WaitForNVM();
+	}
 }
 
 /**************************************************************************************************
@@ -134,7 +142,8 @@ void ui_set_alarm(void)
 			BTN_press_SIG[BUTTON_DOWN] = 0;
 			alarm.enabled = !alarm.enabled;
 		}
-	} while (!BTN_press_SIG[BUTTON_SET]);
+	} while (!BTN_press_SIG[BUTTON_SET] ||		// button pressed
+			BTN_hold_SIG[BUTTON_SET]);			// button not held from time of entry
 	BTN_press_SIG[BUTTON_SET] = 0;
 	
 	// display set time
@@ -144,15 +153,19 @@ void ui_set_alarm(void)
 	DIS_set_digit(5, bin_dec_lut[alarm.minute][1]);
 	
 	// set hours
-	DIS_set_digit_brightness(2, brightness.high);
-	DIS_set_digit_brightness(3, brightness.high);
-	DIS_set_digit_brightness(4, brightness.high / 2);
-	DIS_set_digit_brightness(5, brightness.high / 2);
-	
 	do 
 	{
-		DIS_set_digit(2, bin_dec_lut[alarm.hour][0]);
-		DIS_set_digit(3, bin_dec_lut[alarm.hour][1]);
+		uint8_t flash = 0;
+		
+		if (flash < 0x7F)
+		{
+			DIS_set_digit(2, bin_dec_lut[alarm.hour][0]);
+			DIS_set_digit(3, bin_dec_lut[alarm.hour][1]);
+		} else {
+			DIS_set_digit(2, 0);
+			DIS_set_digit(3, 0);
+		}
+		flash++;
 		
 		if (BTN_press_SIG[BUTTON_UP])
 		{
@@ -170,7 +183,40 @@ void ui_set_alarm(void)
 		}
 	} while (!BTN_press_SIG[BUTTON_SET]);
 	BTN_press_SIG[BUTTON_SET] = 0;
-	
+	DIS_set_digit(2, bin_dec_lut[alarm.hour][0]);
+	DIS_set_digit(3, bin_dec_lut[alarm.hour][1]);
+
+	// set minutes
+	do 
+	{
+		uint8_t flash = 0;
+		
+		if (flash < 0x7F)
+		{
+			DIS_set_digit(4, bin_dec_lut[alarm.minute][0]);
+			DIS_set_digit(5, bin_dec_lut[alarm.minute][1]);
+		} else {
+			DIS_set_digit(4, 0);
+			DIS_set_digit(5, 0);
+		}
+		flash++;
+		
+		if (BTN_press_SIG[BUTTON_UP])
+		{
+			alarm.minute++;
+			if (alarm.minute > 59)
+				alarm.minute = 0;
+		}
+		
+		if (BTN_press_SIG[BUTTON_DOWN])
+		{
+			if (alarm.minute > 1)
+				alarm.minute--;
+			else
+				alarm.minute = 23;
+		}
+	} while (!BTN_press_SIG[BUTTON_SET]);
+	BTN_press_SIG[BUTTON_SET] = 0;
 }
 
 /**************************************************************************************************
@@ -178,22 +224,24 @@ void ui_set_alarm(void)
 */
 void UI_run(void)
 {
-	uint8_t state = STATE_CLOCK;
-
 	for(;;)
 	{
-		switch(state)
+		if (RTC_second_tick_SIG)
 		{
-			case STATE_CLOCK:
-				if (RTC_second_tick_SIG)
-				{
-					RTC_second_tick_SIG = 0;
-					ui_update_clock();
-				}
-				break;
-
-			default:
-				state = STATE_CLOCK;
+			RTC_second_tick_SIG = 0;
+			ui_update_clock();
 		}
+		
+		if (RTC_minute_tick_SIG)
+		{
+			RTC_minute_tick_SIG = 0;
+			RTC_time_t time;
+			RTC_get_time(&time);
+			if ((time.hrs == alarm.hour) && (time.mins == alarm.minute))
+				NOP();	// sound alarm
+		}
+		
+		if (BTN_hold_SIG[BUTTON_SET])
+			ui_set_alarm();
 	}
 }

@@ -20,8 +20,8 @@ const struct {
 									{ &PORTA, PIN2_bm, true },
 								};
 
-volatile uint8_t	BTN_hold_SIG[BUTTON_COUNT];
-volatile uint8_t	BTN_press_SIG[BUTTON_COUNT];
+volatile uint8_t	BTN_hold_SIG[BUTTON_COUNT];		// set when button held, auto-clear
+volatile uint8_t	BTN_press_SIG[BUTTON_COUNT];	// set when button pressed, manual clear
 
 /**************************************************************************************************
 * Set up button input
@@ -51,17 +51,22 @@ ISR(BUTTON_TC_OVR_vect)
 	{
 		if (btn_port_map[i].port->IN & btn_port_map[i].mask)
 		{
+			// button presses
 			if (hold_timer[i] < 255)
 				hold_timer[i]++;
 			if (hold_timer[i] == 1)
 				BTN_press_SIG[i] = 0xFF;
-			if ((hold_timer[i] > BUTTON_REPEAT_START) &&
-				((hold_timer[i] % BUTTON_REPEAT_MODULO) == 0))
-				{
-					BTN_hold_SIG[i] = 0xFF;
-					if (btn_port_map[i].repeat)
-						BTN_press_SIG[i] = 0xFF;
-				}
+
+			// button hold and key repeat
+			if (hold_timer[i] > BUTTON_REPEAT_START)
+			{
+				BTN_hold_SIG[i] = 0xFF;
+				if (((hold_timer[i] % BUTTON_REPEAT_MODULO) == 0) &&
+					btn_port_map[i].repeat)
+					BTN_press_SIG[i] = 0xFF;
+			}
 		}
+		else
+			BTN_hold_SIG[i] = 0;
 	}
 }

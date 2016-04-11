@@ -22,6 +22,7 @@
 
 volatile RTC_time_t	time_AT;
 volatile uint8_t	RTC_second_tick_SIG = 0;		// !! SIGNAL !! set to 0xFF when second ticks over
+volatile uint8_t	RTC_minute_tick_SIG = 0;		// !! SIGNAL !! set to 0xFF when second ticks over
 
 const __flash uint8_t days_in_month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
@@ -202,6 +203,7 @@ ISR(RTC_OVF_vect)
 	time_AT.secs++;
 	if (time_AT.secs > 59)
 	{
+		RTC_minute_tick_SIG = 0xFF;
 		time_AT.secs = 0;
 		time_AT.mins++;
 		if (time_AT.mins > 59)
