@@ -66,7 +66,7 @@
       <Value>F_CPU=16000000</Value>
     </ListValues>
   </avrgcc.compiler.symbols.DefSymbols>
-  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.level>Optimize most (-O3)</avrgcc.compiler.optimization.level>
   <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
   <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
   <avrgcc.compiler.optimization.DebugLevel>Maximum (-g3)</avrgcc.compiler.optimization.DebugLevel>
@@ -119,10 +119,19 @@
     <Compile Include="adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="bin_dec.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="bit_swap.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="bit_swap.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="buttons.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="buttons.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="clock_driver.c">
@@ -138,6 +147,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="display.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="eeprom.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="eeprom.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="gps.c">
@@ -159,6 +174,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="rtc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ui.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="xmega_baud.h">

@@ -28,6 +28,7 @@
 extern const __flash uint16_t segbmp[];
 
 volatile uint16_t	bitmap_AT[DIS_NUM_DIGITS];
+volatile uint16_t	brightness_AT[DIS_NUM_DIGITS];
 
 
 #pragma region Serial Interaces
@@ -116,7 +117,7 @@ void DIS_set_string(uint8_t digit, const char *s)
 }
 
 /**************************************************************************************************
-** Set display brightness, 0-100%
+** Set brightness for all digits, 0-100%
 */
 void DIS_set_brightness(uint8_t brightness)
 {
@@ -129,6 +130,36 @@ void DIS_set_brightness(uint8_t brightness)
 	uint32_t cca = DIS_TC_PER * brightness;
 	cca /= 100;
 	DIS_TC.CCA = cca;
+/*
+	if (brightness >= 100)
+	{
+		for (uint8_t i = 0; i < DIS_NUM_DIGITS; i++)
+			brightness_AT[i] = 0xFFFF;
+	}
+	else
+	{
+		uint32_t cca = DIS_TC_PER * brightness;
+		cca /= 100;
+		for (uint8_t i = 0; i < DIS_NUM_DIGITS; i++)
+			ATOMIC(brightness_AT[i] = cca);
+	}
+*/
+}
+
+/**************************************************************************************************
+** Set brightness for all digits, 0-100%
+*/
+void DIS_set_digit_brightness(uint8_t digit, uint8_t brightness)
+{
+	uint32_t cca = 0xFFFF;
+
+	if (brightness < 100)
+	{
+		cca = DIS_TC_PER * brightness;
+		cca /= 100;
+	}
+
+	ATOMIC(brightness_AT[digit] = cca);
 }
 
 #pragma endregion
@@ -205,6 +236,9 @@ ISR(DIS_TC_OVF_vect)
 	dis_sink_latch();
 	
 	SINK_PORT.OUTCLR = SINK_BLANK_PIN_bm;
+	
+	// brightness of next digit, double buffered until next timer overflow
+	//DIS_TC.CCABUF = brightness_AT[digit];
 }
 
 /**************************************************************************************************
