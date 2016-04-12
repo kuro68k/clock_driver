@@ -17,6 +17,9 @@
 #include "rtc.h"
 #include "buttons.h"
 #include "eeprom.h"
+#include "adc.h"
+
+#define LDR_ENABLE
 
 extern const __flash uint8_t bin_dec_lut[100][2];
 
@@ -224,6 +227,11 @@ void ui_set_alarm(void)
 */
 void UI_run(void)
 {
+#ifdef LDR_ENABLE
+	uint8_t	ldr[5] = {9};
+	uint8_t	ldr_idx = 0;
+#endif
+	
 	for(;;)
 	{
 		if (RTC_second_tick_SIG)
@@ -243,5 +251,25 @@ void UI_run(void)
 		
 		if (BTN_hold_SIG[BUTTON_SET])
 			ui_set_alarm();
+			
+#ifdef LDR_ENABLE
+		uint16_t v = ADC_read_input(ADC_LDR_MUXPOS);
+		ldr[ldr_idx] = v / 410;		// 0-4095 -> 0-9 approx
+		ldr_idx++;
+		
+		// hysteresis
+		if (ldr_idx >= sizeof(ldr))
+			ldr_idx = 0;
+		uint8_t ave = 0;
+		for (uint8_t i = 0; i < sizeof(ldr); i++)
+			ave += ldr[i];
+		ave /= sizeof(ldr);
+		
+		// set display brightness
+		if (ave >= brightness.threshold)
+			DIS_set_brightness(brightness.high);
+		else
+			DIS_set_brightness(brightness.low);
+#endif
 	}
 }

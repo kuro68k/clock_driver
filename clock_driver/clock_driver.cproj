@@ -179,6 +179,9 @@
     <Compile Include="ui.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="ui.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="xmega_baud.h">
       <SubType>compile</SubType>
     </Compile>

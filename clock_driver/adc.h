@@ -25,6 +25,9 @@
 #define ADC_GND_MUXNEG			ADC_CH_MUXNEGL_PIN1_gc
 #define ADC_GND_INPUTMODE		ADC_CH_INPUTMODE_DIFFWGAINL_gc
 
+// optional LDR
+#define ADC_LDR_PIN_bm			PIN2_bm
+#define ADC_LDR_MUXPOS			ADC_CH_MUXPOS_PIN2_gc
 
 // optional NTC
 #define ADC_NTC					// uncomment to enable
@@ -52,6 +55,7 @@ extern float	ADC_read_internal_temperature(void);
 #ifdef ADC_NTC
 extern float	ADC_read_ntc_temperature(void);
 #endif
+extern uint16_t ADC_read_input(uint8_t muxpos);
 
 
 

@@ -166,3 +166,24 @@ float ADC_read_ntc_temperature(void)
 
 	return steinhart;
 }
+
+/**************************************************************************************************
+** Read generic analogue input, 12 bit result
+*/
+uint16_t ADC_read_input(uint8_t muxpos)
+{
+	uint8_t		i;
+	uint16_t	v = 0;
+
+	ADCA.CH0.CTRL = ADC_CH_GAIN_1X_gc | ADC_CH_INPUTMODE_SINGLEENDED_gc;
+	ADCA.CH0.MUXCTRL = muxpos | ADC_GND_MUXNEG;
+	
+	for (i = 0; i < 2; i++)			// discard a couple of samples
+		adc_sample();
+	
+	for (i = 0; i < 16; i++)		// take 16 samples and average them
+		v += adc_sample();
+	v /= i;
+
+	return v;
+}

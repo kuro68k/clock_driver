@@ -11,9 +11,11 @@
 #include <stdbool.h>
 #include "debug.h"
 #include "hw_misc.h"
+#include "adc.h"
 #include "display.h"
 #include "rtc.h"
 #include "gps.h"
+#include "ui.h"
 
 // 2kclk (2s) watchdog, continuous BOD at 3.0V
 FUSES = {
@@ -31,8 +33,10 @@ int main(void)
 	DBG_init();
 	HW_init();
 	DIS_init();
+	ADC_init();
 	RTC_init();
 	GPS_init();
+	UI_init();
 
 	// enable interrupts
 	HW_CCPWrite(&PMIC.CTRL, PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm);
@@ -66,4 +70,6 @@ int main(void)
 		if (i > 17) i = 0;
 		RTC_wait_for_second_tick();
 	}
+	
+	UI_run();
 }
